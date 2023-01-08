@@ -25,7 +25,7 @@ $database = new Database($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD'
 
 $user_gateway = new UserGateway($database);
 $auth = new Auth($user_gateway);
-if (!$auth->authenticateApiKey()) {
+if (!$auth->authenticateAccessToken()) {
     die();
 }
 

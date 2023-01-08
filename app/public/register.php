@@ -1,8 +1,10 @@
 <?php
-use App\Database;
+
+declare(strict_types=1);
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
+use App\Database;
 use Dotenv\Dotenv;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

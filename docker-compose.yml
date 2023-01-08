@@ -1,0 +1,37 @@
+version: "3"
+services:
+  web:
+    image: httpd:latest
+    ports:
+      - 80:80
+    volumes:
+      - ./httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./app:/usr/local/apache2/htdocs/
+  app:
+    build:
+      args:
+        - APP_ENV=dev
+      context: ./
+      dockerfile: PHP.Dockerfile
+    restart: always
+    volumes:
+      - ./app:/usr/local/apache2/htdocs/
+  db:
+    image: mariadb:latest
+    env_file:
+      - .env
+    volumes:
+      - mysqldata:/var/lib/mysql
+    ports:
+      - 3306:3306
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8000:8080
+    depends_on:
+      - db
+
+
+volumes:
+  mysqldata: {}

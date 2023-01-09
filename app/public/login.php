@@ -6,6 +6,7 @@ require_once(__DIR__  . "/../bootstrap.php");
 
 use App\Database;
 use App\Gateways\UserGateway;
+use App\JWTCodec;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -51,11 +52,11 @@ if (!password_verify($data['password'], $user['password'])) {
     die();
 }
 
-$access_token = base64_encode(
-    json_encode([
-        'id' => $user['id'],
-        'name' => $user['name']
-    ])
-);
+$payload = [
+    'sub' => $user['id'],
+    'name' => $user['name']
+];
+$codec = new JWTCodec($_ENV['SECRET']);
+$access_token = $codec->jwtEncode($payload);
 
 echo json_encode(['access_token' => $access_token]);

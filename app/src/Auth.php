@@ -2,13 +2,18 @@
 
 namespace App;
 
+use App\Exceptions\InvalidSignatureException;
 use App\Gateways\UserGateway;
+use Exception;
 
 class Auth
 {
     private int $user_id;
 
-    public function __construct(private UserGateway $userGateway)
+    public function __construct(
+        private UserGateway $userGateway,
+        private JWTCodec $codec
+    )
     {
         $this->userGateway= $userGateway;
     }
@@ -47,7 +52,7 @@ class Auth
 
     public function authenticateAccessToken(): bool
     {
-        if (!preg_match("/^Bearer\s+(.*)$/", $_SERVER['REDIRECT_HTTP_AUTHORIZATION'], $matches)) {
+        if (!preg_match("/^Bearer\s+(?<token>.*)$/", $_SERVER['REDIRECT_HTTP_AUTHORIZATION'], $matches)) {
             http_response_code(400);
             echo json_encode([
                 'message' => 'incomplete authorization header'
@@ -55,25 +60,23 @@ class Auth
             return false;
         }
 
-        $plain_text = base64_decode($matches[1], true);
-        if ($plain_text === false) {
+        try {
+            $data = $this->codec->jwtDecode($matches['token']);
+        } catch (InvalidSignatureException) {
+            http_response_code(401);
+            echo json_encode([
+                'message' => 'invalid signature.'
+            ]);
+            return false;
+        } catch (Exception $e) {
             http_response_code(400);
             echo json_encode([
-                'message' => 'invalid authorization header'
+                'message' => '$e->getMessage()'
             ]);
             return false;
         }
 
-        $data = json_decode($plain_text, true);
-        if (is_null($data)) {
-            http_response_code(400);
-            echo json_encode([
-                'message' => 'invalid JSON'
-            ]);
-            return false;
-        }
-
-        $this->user_id = $data['id'];
+        $this->user_id = $data['sub'];
 
         return true;
     }

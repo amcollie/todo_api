@@ -1,4 +1,5 @@
 <?php
+use App\JWTCodec;
 
 require_once(__DIR__ . '/../bootstrap.php');
 
@@ -24,7 +25,8 @@ if ($resource != 'tasks') {
 $database = new Database($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_DATABASE']);
 
 $user_gateway = new UserGateway($database);
-$auth = new Auth($user_gateway);
+$codec = new JWTCodec($_ENV['SECRET']);
+$auth = new Auth($user_gateway, $codec);
 if (!$auth->authenticateAccessToken()) {
     die();
 }
